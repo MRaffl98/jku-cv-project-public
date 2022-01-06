@@ -1,0 +1,27 @@
+WHAT DISTINGUISHES A HUMAN FROM OTHER IMAGE PARTS
+[1] size: order of magnitude ca. 20x20
+[2] movement: strong temporal differences
+[3] occluded: visible in ca. 2-3 images per timestep
+[4] color: very different color (blue)(red)(yellow)
+[5] brightness: not as light as beacon and other parts
+
+IDEAS
+* patch size -> [1]
+    use reasonable patch size for modeling like 8x8, 16x16 or 32x32
+* temporal differences -> [2]
+    include temporal differences, espcially between t=0 and t=6
+* temporal model -> [2]
+    predict patch in t=6 from patch in t=0 instead of true autoencoder, use larger batch-size! (e.g. 32x32)
+* alternative integration -> [3]
+    currently we just take the average probably some quantile would work better to make the moving humans more 'visible'
+* surrounding window locality -> [4][1]
+    subtract closest pixel from surrounding window
+* color integration -> [4]
+    make very rare color(s) (combinations) survive the integration step
+* learn brightness -> [5]
+    train on very bright patches (e.g. beacons) multiple times to learn they are not anomalous
+* remove brightness -> [5]
+    preprocess bright pixels, darken them (crop high values or use darker pixels from neighborhood)
+
+
+(remove brightness) -> alternative/color integration -> surrounding window locality -> temporal differences -> patch size -> learn brightness -> (temporal) model (trained on multiple samples)

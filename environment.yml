@@ -1,0 +1,21 @@
+name: cvlab
+channels:
+  - defaults
+  - pytorch
+  - conda-forge
+dependencies:
+  - numpy
+  - scikit-image
+  - scipy
+  - matplotlib
+  - python=3.9
+  - jupyter
+  - pytorch==1.10.0
+  - torchvision==0.11.1
+  - docopt==0.6.2
+  - scikit-learn
+  - pandas
+  - pip
+  - pip:
+    - opencv-python
+    - tqdm==4.4.0
