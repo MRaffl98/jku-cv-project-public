@@ -8,10 +8,11 @@ from config import *
 from dataloading.dataset import WisarDataset
 from preprocessing.patch.patch_generator import fill_patch_dict
 from preprocessing.patch.black_patch_removal import remove
+from preprocessing.patch.light_patch_removal import remove_light
 from preprocessing.patch.patch_dataset import PatchDataset
 from models.modules.pca_network import PCA
 from models.trainer.flat_trainer import FlatPredictor
-from postprocessing.patch2image import patch2image
+from postprocessing.patch2image import patch2image, reconstruct
 from postprocessing.thresholding import threshold
 from postprocessing.dbscan import create_dbscan_dataset, cluster
 from evaluation.utils import BoundingBox
@@ -23,11 +24,20 @@ valid_dataset = WisarDataset(data_path, subset='validation', integrate=integrate
 #### PATCH PREPARATION
 sample_id = valid_dataset.samples[sample_idx].split('/')[-1]
 data = valid_dataset[sample_idx]
+
 patch_dict = {}
 for (camera, img) in data[0].items():
     patch_dict = fill_patch_dict(patch_dict, img, sample_id, camera, patch_size)
 patch_dict = remove(patch_dict, percent=percent)
 patch_dataset = PatchDataset(patch_dict)
+
+"""patch_dict = {}
+img = data[0]['3-integrated'].astype(np.int16) + data[0]['6-integrated'].astype(np.int16) - data[0]['0-integrated'].astype(np.int16)
+patch_dict = fill_patch_dict(patch_dict, img, sample_id, 'none', patch_size)
+patch_dict = remove(patch_dict, percent=percent)
+patch_dict = remove_light(patch_dict)
+patch_dataset = PatchDataset(patch_dict)"""
+print('patch preparation finished ...')
 
 #### PREDICTION PREPARATION
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -38,7 +48,7 @@ model.eval()
 
 #### PREDICTION
 predictor = FlatPredictor(model, input_shape, reconstruction_loss, device)
-losses = predictor.predict(patch_dataset, batch_size=batch_size, shuffle=False)
+losses, reconstructions = predictor.predict(patch_dataset, batch_size=batch_size, shuffle=False)
 
 #### POSTPROCESSING
 # handle patch losses
@@ -50,25 +60,41 @@ patch_names = patch_dataset.patch_ids
 patch_numbers = np.array([x.split('-') [-1] for x in patch_names]).astype('int')
 timesteps = np.array([x.split('-')[-3] for x in patch_names]).astype('int')
 
+# draw original image
+original_image = data[0][str(timestep) + '-integrated']
+plt.imshow(original_image)
+plt.show()
+plt.imshow(img)
+plt.show()
+
+# draw reconstruction
+reconstructions = torch.cat(reconstructions, dim=0).numpy()
+reconstructed_image = reconstruct(patch_numbers[timesteps==timestep], reconstructions[timesteps==timestep], patch_size)
+"""reconstructed_image = reconstruct(patch_numbers, reconstructions, patch_size)"""
+plt.imshow(reconstructed_image)
+plt.show()
+
 # draw saliency map
 saliency_map = patch2image(patch_numbers[timesteps==timestep], patch_losses[timesteps==timestep], patch_size)
-#plt.imshow(saliency_map)
-#plt.show()
+"""saliency_map = patch2image(patch_numbers, patch_losses, patch_size)"""
+plt.imshow(saliency_map)
+plt.show()
 
 # draw anomaly map
-anomalies = threshold(patch_losses, mode=threshold_mode)
+anomalies = threshold(patch_losses, mode='q99')
 anomaly_map = patch2image(patch_numbers[timesteps==timestep], anomalies[timesteps==timestep], patch_size)
-#plt.imshow(anomaly_map)
-#plt.show()
+"""anomaly_map = patch2image(patch_numbers, anomalies, patch_size)"""
+plt.imshow(anomaly_map)
+plt.show()
 
 # dbscan
 X = create_dbscan_dataset(anomaly_map)
 labels, clusters, stats = cluster(X)
 
-#for (i, c) in enumerate(clusters):
-#    plt.scatter(x=c[:, 0], y=c[:, 1], label='cluster' + str(i))
-#plt.legend()
-#plt.show()
+for (i, c) in enumerate(clusters):
+    plt.scatter(x=c[:, 0], y=c[:, 1], label='cluster' + str(i))
+plt.legend()
+plt.show()
 
 # find bounding boxes
 candidates = stats[stats['range_x'].between(min_range, max_range) & stats['range_y'].between(min_range, max_range)]

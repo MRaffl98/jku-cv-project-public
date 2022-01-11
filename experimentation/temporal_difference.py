@@ -1,9 +1,10 @@
-import os
 import numpy as np
 import matplotlib.pyplot as plt
+import torch.utils.data
 
-from dataloading.dataset import get_loader
-from preprocessing.patch.patch_generator import identity_collator
+from config import *
+from dataloading.dataset import WisarDataset, identity_collator
+
 
 
 """
@@ -19,9 +20,8 @@ if __name__ == '__main__':
 
     #### 1. LOAD SOME VALIDATION SAMPLE FOR EXPLORATION
     # load just one (batch_size=1) validation set image for the experimentation
-    validation_loader = get_loader(os.getenv("DATA_PATH"), batch_size=1,
-                                   integrate=True, mask_timestemp=True,
-                                   collate_fn=identity_collator, subset='validation')
+    validation_dataset = WisarDataset(data_path, 'validation', integrate=True, mask_timestemp=True)
+    validation_loader = torch.utils.data.DataLoader(validation_dataset, collate_fn=identity_collator)
 
     # get the sample (dict with integrated (=warped) image for each timestep
     # e.g.: key 'valid-1-4-0' is warped image of timestep 0 for valid-1-4 sample
@@ -30,19 +30,19 @@ if __name__ == '__main__':
         break
 
     # e.g.: sample_id = 'valid-1-4-' if we loaded valid-1-4
-    sample_id = list(sample.keys())[0][:-1]
+    sample_id = validation_dataset.samples[0].split('/')[-1]
     # warped image at timestep 3
-    central_img = sample[sample_id + str(3)]
+    central_img = sample[str(3) + '-integrated']
 
 
     #### 2. EXPLORE WARPED IMAGES OF TIMESTEPS
-    plt.imshow(sample[sample_id + str(3)])
+    plt.imshow(sample[str(3) + '-integrated'])
     plt.show()
 
 
     #### 3. TRY OUT DIFFERENCE OF LAST TIMESTEP (=6) AND FIRST TIMESTEP (=0)
     # plot central timestep + last timestep - first timestep
-    plt.imshow(sample[sample_id + '3'].astype(np.int16) + sample[sample_id + '6'].astype(np.int16) - sample[sample_id + '0'].astype(np.int16))
+    plt.imshow(sample['3' + '-integrated'].astype(np.int16) + sample['6' + '-integrated'].astype(np.int16) - sample['0' + '-integrated'].astype(np.int16))
     plt.show()
 
     # plot last timestep - first timestep

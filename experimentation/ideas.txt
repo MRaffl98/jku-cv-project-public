@@ -1,11 +1,11 @@
-WHAT DISTINGUISHES A HUMAN FROM OTHER IMAGE PARTS
+CHARACTERISTICS OF A MOVING HUMAN
 [1] size: order of magnitude ca. 20x20
 [2] movement: strong temporal differences
 [3] occluded: visible in ca. 2-3 images per timestep
 [4] color: very different color (blue)(red)(yellow)
 [5] brightness: not as light as beacon and other parts
 
-IDEAS
+MODELLING / PREPROCESSING IDEAS
 * patch size -> [1]
     use reasonable patch size for modeling like 8x8, 16x16 or 32x32
 * temporal differences -> [2]
@@ -25,3 +25,9 @@ IDEAS
 
 
 (remove brightness) -> alternative/color integration -> surrounding window locality -> temporal differences -> patch size -> learn brightness -> (temporal) model (trained on multiple samples)
+
+EXPERIMENTAL LOG
+1. standard setting [0.005]
+2. change patch_size from 16 to 8 [0.01206]
+3. use temporal difference with q90 [0.009] (problem: borders!)
+4. add light patch removal [0.00606] (problem: borders!)

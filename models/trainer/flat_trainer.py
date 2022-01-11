@@ -42,6 +42,7 @@ class FlatPredictor:
 
     def predict(self, dataset, batch_size=10, shuffle=False):
         losses = []
+        reconstructions = []
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
         with torch.no_grad():
             for batch_features in tqdm(dataloader):
@@ -49,4 +50,5 @@ class FlatPredictor:
                 reconstruction = self.model(batch_features)
                 reconstruction_error = self.criterion(reconstruction, batch_features)
                 losses.append(reconstruction_error)
-        return losses
+                reconstructions.append(reconstruction)
+        return losses, reconstructions

@@ -7,6 +7,7 @@ from config import *
 from dataloading.dataset import WisarDataset
 from preprocessing.patch.patch_generator import fill_patch_dict
 from preprocessing.patch.black_patch_removal import remove
+from preprocessing.patch.light_patch_removal import remove_light
 from preprocessing.patch.patch_dataset import PatchDataset
 from models.modules.pca_network import PCA
 from models.trainer.flat_trainer import FlatPredictor
@@ -29,6 +30,12 @@ for (sample_path, data) in zip(predict_dataset.samples, predict_dataset):
     patch_dict = remove(patch_dict, percent=percent)
     patch_dataset = PatchDataset(patch_dict)
 
+    """img = data[0]['3-integrated'].astype(np.int16) + data[0]['6-integrated'].astype(np.int16) - data[0]['0-integrated'].astype(np.int16)
+    patch_dict = fill_patch_dict(patch_dict, img, sample_id, 'none', patch_size)
+    patch_dict = remove(patch_dict, percent=percent)
+    patch_dict = remove_light(patch_dict)
+    patch_dataset = PatchDataset(patch_dict)"""
+
     #### PREDICTION PREPARATION
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     reconstruction_loss = nn.MSELoss(reduction='none')
@@ -38,7 +45,7 @@ for (sample_path, data) in zip(predict_dataset.samples, predict_dataset):
 
     #### PREDICTION
     predictor = FlatPredictor(model, input_shape, reconstruction_loss, device)
-    losses = predictor.predict(patch_dataset, batch_size=batch_size, shuffle=False)
+    losses, reconstructions = predictor.predict(patch_dataset, batch_size=batch_size, shuffle=False)
 
     #### POSTPROCESSING
     # handle patch losses
@@ -47,12 +54,14 @@ for (sample_path, data) in zip(predict_dataset.samples, predict_dataset):
     # handle patch identifiers
     patch_names = patch_dataset.patch_ids
     patch_numbers = np.array([x.split('-') [-1] for x in patch_names]).astype('int')
-    timesteps = np.array([x.split('-')[-3] for x in patch_names]).astype('int')
+    """timesteps = np.array([x.split('-')[-3] for x in patch_names]).astype('int')"""
     # saliency map
-    saliency_map = patch2image(patch_numbers[timesteps==timestep], patch_losses[timesteps==timestep], patch_size)
+    """saliency_map = patch2image(patch_numbers[timesteps==timestep], patch_losses[timesteps==timestep], patch_size)"""
+    saliency_map = patch2image(patch_numbers, patch_losses, patch_size)
     # anomaly map
     anomalies = threshold(patch_losses, mode=threshold_mode)
-    anomaly_map = patch2image(patch_numbers[timesteps==timestep], anomalies[timesteps==timestep], patch_size)
+    """anomaly_map = patch2image(patch_numbers[timesteps==timestep], anomalies[timesteps==timestep], patch_size)"""
+    anomaly_map = patch2image(patch_numbers, anomalies, patch_size)
     # dbscan
     X = create_dbscan_dataset(anomaly_map)
     labels, clusters, stats = cluster(X)

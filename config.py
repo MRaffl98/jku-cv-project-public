@@ -14,7 +14,7 @@ mask_timestemp = True
 random_rotation = False
 
 #### PATCH CONFIG
-patch_size = 16
+patch_size = 8
 percent = 1
 
 #### MODEL CONFIG
@@ -27,12 +27,12 @@ batch_size = 256
 learning_rate = 1e-3
 
 #### POSTPROCESSING CONFIG
-threshold_mode = 'q95'
+threshold_mode = 'q90'
 min_range = 25
 max_range = 55
 
 #### EXPLORATION CONFIG
-sample_idx = 0
+sample_idx = 1
 timestep = 3
 
 #### PREDICTION CONFIG
