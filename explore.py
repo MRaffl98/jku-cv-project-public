@@ -81,7 +81,7 @@ plt.imshow(saliency_map)
 plt.show()
 
 # draw anomaly map
-anomalies = threshold(patch_losses, mode='q99')
+anomalies = threshold(patch_losses, mode=threshold_mode)
 anomaly_map = patch2image(patch_numbers[timesteps==timestep], anomalies[timesteps==timestep], patch_size)
 """anomaly_map = patch2image(patch_numbers, anomalies, patch_size)"""
 plt.imshow(anomaly_map)

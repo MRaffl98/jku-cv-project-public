@@ -27,7 +27,7 @@ batch_size = 256
 learning_rate = 1e-3
 
 #### POSTPROCESSING CONFIG
-threshold_mode = 'q90'
+threshold_mode = 'q95'
 min_range = 25
 max_range = 55
 

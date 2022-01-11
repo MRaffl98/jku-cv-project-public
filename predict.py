@@ -54,14 +54,14 @@ for (sample_path, data) in zip(predict_dataset.samples, predict_dataset):
     # handle patch identifiers
     patch_names = patch_dataset.patch_ids
     patch_numbers = np.array([x.split('-') [-1] for x in patch_names]).astype('int')
-    """timesteps = np.array([x.split('-')[-3] for x in patch_names]).astype('int')"""
+    timesteps = np.array([x.split('-')[-3] for x in patch_names]).astype('int')
     # saliency map
-    """saliency_map = patch2image(patch_numbers[timesteps==timestep], patch_losses[timesteps==timestep], patch_size)"""
-    saliency_map = patch2image(patch_numbers, patch_losses, patch_size)
+    saliency_map = patch2image(patch_numbers[timesteps==timestep], patch_losses[timesteps==timestep], patch_size)
+    """saliency_map = patch2image(patch_numbers, patch_losses, patch_size)"""
     # anomaly map
     anomalies = threshold(patch_losses, mode=threshold_mode)
-    """anomaly_map = patch2image(patch_numbers[timesteps==timestep], anomalies[timesteps==timestep], patch_size)"""
-    anomaly_map = patch2image(patch_numbers, anomalies, patch_size)
+    anomaly_map = patch2image(patch_numbers[timesteps==timestep], anomalies[timesteps==timestep], patch_size)
+    """anomaly_map = patch2image(patch_numbers, anomalies, patch_size)"""
     # dbscan
     X = create_dbscan_dataset(anomaly_map)
     labels, clusters, stats = cluster(X)
